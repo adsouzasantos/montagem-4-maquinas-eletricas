@@ -10,7 +10,8 @@ body {
     min-height: 100vh;
     padding: 20px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
 }
 
@@ -31,7 +32,7 @@ body {
 }
 
 .logo-ifpb {
-    width: 120px;
+    width: 90px;
     height: auto;
     margin-bottom: 20px;
     display: block;
@@ -372,5 +373,22 @@ canvas {
 
 .success-message.show {
     display: block;
+}
+
+.footer {
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: auto;
+    font-size: 13px;
+    font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent; /* Remove a cor de fundo e deixa transparente */
+}
+
+.footer p {
+    margin: 0;
+    line-height: 1.6;
 }
 
