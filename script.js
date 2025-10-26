@@ -240,6 +240,7 @@ function limparFormulario() {
     document.getElementById('w1').focus();
 }
 
+
 function mostrarErro(mensagem) {
     const errorDiv = document.getElementById('errorMessage');
     errorDiv.textContent = '✗ ' + mensagem;
