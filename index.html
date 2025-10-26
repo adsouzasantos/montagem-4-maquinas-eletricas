@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface de Cálculo de Potência Trifásica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="cazajeiras.png" alt="Logo IFPB Campus Cajazeiras" class="logo-ifpb">
+            <h1>Cálculo de Potência Trifásica</h1>
+            <p>Interface para análise de circuitos trifásicos usando o método dos dois wattímetros</p>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+        <div class="success-message" id="successMessage">✓ Cálculos realizados com sucesso!</div>
+
+        <div class="content">
+            <!-- Seção de Entrada -->
+            <div class="section">
+                <div class="section-title">Dados de Entrada</div>
+
+                <div class="info-box">
+                    <strong>Método dos Dois Wattímetros:</strong> Insira as leituras dos wattímetros W1 e W2, tensão de linha e frequência para calcular as potências trifásicas.
+                </div>
+
+                <div class="form-group">
+                    <label>Frequência do Sistema <span class="unit">(Hz)</span></label>
+                    <div class="frequency-selector">
+                        <button class="freq-btn active" data-freq="60">60 Hz</button>
+                        <button class="freq-btn" data-freq="50">50 Hz</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Leitura do Wattímetro 1 (W1) <span class="unit">(W)</span></label>
+                    <input type="number" id="w1" placeholder="Ex: 1500" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label>Leitura do Wattímetro 2 (W2) <span class="unit">(W)</span></label>
+                    <input type="number" id="w2" placeholder="Ex: 1200" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label>Tensão de Linha (VL) <span class="unit">(V)</span></label>
+                    <input type="number" id="vl" placeholder="Ex: 220 ou 380" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label>Corrente de Linha (IL) <span class="unit">(A)</span></label>
+                    <input type="number" id="il" placeholder="Ex: 5.5" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label>Fator de Potência Desejado <span class="unit">(FP)</span></label>
+                    <input type="number" id="fpDesejado" placeholder="0.95" min="0.7" max="1" step="0.01" value="0.95">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-calculate" onclick="calcularPotencias()">Calcular</button>
+                    <button class="btn-reset" onclick="limparFormulario()">Limpar</button>
+                </div>
+
+                <div class="formula-display" id="formulaDisplay" style="display: none;">
+                    <strong>Fórmulas Utilizadas:</strong><br>
+                    P₃φ = W1 + W2<br>
+                    Q₃φ = √3 × (W2 - W1)<br>
+                    S₃φ = √(P₃φ² + Q₃φ²)<br>
+                    FP = cos(φ) = P₃φ / S₃φ<br>
+                    C = Qc₃φ / (3 × 2π × f × VL²)
+                </div>
+            </div>
+
+            <!-- Seção de Resultados -->
+            <div class="section">
+                <div class="section-title">Resultados dos Cálculos</div>
+
+                <div class="results-container">
+                    <div class="result-item">
+                        <div class="result-label">Potência Ativa Trifásica</div>
+                        <div class="result-value">
+                            <span id="resultP">0</span>
+                            <span class="result-unit">W</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Potência Reativa Trifásica</div>
+                        <div class="result-value">
+                            <span id="resultQ">0</span>
+                            <span class="result-unit">VAr</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Potência Aparente Trifásica</div>
+                        <div class="result-value">
+                            <span id="resultS">0</span>
+                            <span class="result-unit">VA</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Fator de Potência</div>
+                        <div class="result-value">
+                            <span id="resultFP">0</span>
+                            <span class="result-unit">-</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Ângulo de Fase (φ)</div>
+                        <div class="result-value">
+                            <span id="resultPhi">0</span>
+                            <span class="result-unit">°</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Tipo de Carga</div>
+                        <div class="result-value" style="color: #666; font-size: 16px;">
+                            <span id="resultTipo">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Capacitor -->
+                <div class="capacitor-section">
+                    <div class="section-title">Correção do Fator de Potência</div>
+
+                    <div class="capacitor-info">
+                        <strong>Objetivo:</strong> Corrigir o fator de potência para <strong id="fpDesejadoDisplay">0.95</strong> (indutivo).
+                    </div>
+
+                    <div class="capacitor-value">
+                        <div class="capacitor-value-label">Capacitância Necessária (por fase)</div>
+                        <div class="capacitor-value-display">
+                            <span id="resultC">0</span>
+                            <span class="result-unit">µF</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; font-size: 12px; color: #856404;">
+                        <strong>Nota:</strong> Os capacitores devem ser ligados em <strong>paralelo</strong> com a carga, podendo ser configurados em <strong>Y (estrela)</strong> ou <strong>Δ (delta)</strong>.
+                    </div>
+                </div>
+
+                <!-- Triângulo de Potências -->
+                <div class="power-triangle" id="triangleContainer" style="display: none;">
+                    <canvas id="triangleCanvas" width="300" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
