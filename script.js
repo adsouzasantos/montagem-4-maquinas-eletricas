@@ -1,6 +1,5 @@
 // ================================================
 //  CALCULADORA DE POTÊNCIA TRIFÁSICA + CAPACITOR
-//  Versão corrigida, otimizada e robusta
 // ================================================
 
 let frequenciaAtual = 60;
