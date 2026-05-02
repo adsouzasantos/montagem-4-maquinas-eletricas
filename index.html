@@ -3,165 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Potência Trifásica</title>
+    <meta name="description" content="Calculadora de Potência Trifásica - Método dos Dois Wattímetros + Correção do Fator de Potência com seleção de capacitores WEG">
+    <meta name="theme-color" content="#0fa96c">
+    <title>Calculadora de Potência Trifásica | IFPB Cajazeiras</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon1.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* Cabeçalho fixo no topo */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Logo centralizada */
+        .logo-ifpb {
+            height: 80px;
+            width: auto;
+            cursor: pointer;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .logo-ifpb:hover {
+            transform: scale(1.05);
+            filter: brightness(0.95);
+        }
+
+        /* Ajuste do container para compensar o header fixo */
+        .container {
+            margin-top: 120px;
+        }
+
+        /* Responsivo para telas menores */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 20px;
+            }
+
+            .logo-ifpb {
+                height: 70px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 10px 15px;
+            }
+
+            .logo-ifpb {
+                height: 60px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- CABEÇALHO FIXO - APENAS LOGO -->
+    <div class="header">
+        <img src="verde.png" alt="Logo IFPB Campus Cajazeiras" class="logo-ifpb" onclick="recarregarPagina()" title="Clique para voltar ao início">
+    </div>
+
     <div class="container">
-        <div class="header">
-            <img src="caja.jpeg" alt="Logo IFPB Campus Cajazeiras" class="logo-ifpb">
-            <h1>Calculadora de Potência Trifásica</h1>
-            <p>Interface para análise de circuitos trifásicos usando o método dos dois wattímetros</p>
+        <!-- TÍTULO PRINCIPAL -->
+        <div class="page-title" style="text-align: center; margin-bottom: 30px; padding: 20px 0;">
+            <h1 style="font-size: 28px; color: #2c3e50; font-weight: 700; margin: 0;">Calculadora de Potência Trifásica</h1>
+            <p style="font-size: 14px; color: #7f8c8d; font-weight: 500; margin: 8px 0 0 0;">Método dos Dois Wattímetros + Correção do Fator de Potência</p>
         </div>
 
-        <div class="error" id="errorMessage"></div>
-        <div class="success-message" id="successMessage">✓ Cálculos realizados com sucesso!</div>
+        <!-- MENSAGENS DE ERRO E SUCESSO -->
+        <div class="error" id="errorMessage" role="alert"></div>
+        <div class="success-message" id="successMessage" role="alert">
+            <i class="bi bi-check-circle-fill"></i> Cálculos realizados com sucesso!
+        </div>
 
+        <!-- CONTEÚDO PRINCIPAL -->
         <div class="content">
-            <!-- Seção de Entrada -->
+            <!-- ========== SEÇÃO DE ENTRADA ========== -->
             <div class="section">
-                <div class="section-title">Dados de Entrada</div>
-
-                <div class="info-box">
-                    <strong>Método dos Dois Wattímetros:</strong> Insira as leituras dos wattímetros W1 e W2, tensão de linha e frequência para calcular as potências trifásicas.
+                <div class="section-title">
+                    <i class="bi bi-input-cursor"></i> Dados de Entrada
                 </div>
 
+                <div class="info-box">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong style="cursor: pointer; color: #0fa96c; text-decoration: underline;" onclick="abrirModal()">Método dos Dois Wattímetros:</strong> Insira W1, W2, tensão, corrente e FP desejado.
+                </div>
+
+                <!-- Frequência -->
                 <div class="form-group">
-                    <label>Frequência do Sistema <span class="unit">(Hz)</span></label>
+                    <label>
+                        <i class="bi bi-activity"></i>
+                        Frequência do Sistema <span class="unit">(Hz)</span>
+                    </label>
                     <div class="frequency-selector">
                         <button class="freq-btn active" data-freq="60">60 Hz</button>
                         <button class="freq-btn" data-freq="50">50 Hz</button>
                     </div>
                 </div>
 
+                <!-- W1 -->
                 <div class="form-group">
-                    <label>Leitura do Wattímetro 1 (W1) <span class="unit">(W)</span></label>
-                    <input type="number" id="w1" placeholder="Ex: 1500" step="0.1">
+                    <label>
+                        <i class="bi bi-speedometer"></i>
+                        Leitura do Wattímetro 1 (W1) <span class="unit">(W)</span>
+                    </label>
+                    <input type="number" id="w1" placeholder="Ex: 2500" step="0.1" required>
                 </div>
 
+                <!-- W2 -->
                 <div class="form-group">
-                    <label>Leitura do Wattímetro 2 (W2) <span class="unit">(W)</span></label>
-                    <input type="number" id="w2" placeholder="Ex: 1200" step="0.1">
+                    <label>
+                        <i class="bi bi-speedometer"></i>
+                        Leitura do Wattímetro 2 (W2) <span class="unit">(W)</span>
+                    </label>
+                    <input type="number" id="w2" placeholder="Ex: 1200" step="0.1" required>
                 </div>
 
+                <!-- Tensão -->
                 <div class="form-group">
-                    <label>Tensão de Linha (VL) <span class="unit">(V)</span></label>
-                    <input type="number" id="vl" placeholder="Ex: 220 ou 380" step="0.1">
+                    <label>
+                        <i class="bi bi-lightning"></i>
+                        Tensão de Linha (VL) <span class="unit">(V)</span>
+                    </label>
+                    <input type="number" id="vl" placeholder="Ex: 380" step="0.1" required>
                 </div>
 
+                <!-- Corrente -->
                 <div class="form-group">
-                    <label>Corrente de Linha (IL) <span class="unit">(A)</span></label>
-                    <input type="number" id="il" placeholder="Ex: 5.5" step="0.01">
+                    <label>
+                        <i class="bi bi-lightning-fill"></i>
+                        Corrente de Linha (IL) <span class="unit">(A)</span>
+                    </label>
+                    <input type="number" id="il" placeholder="Ex: 6.5" step="0.01" required>
                 </div>
 
+                <!-- FP Desejado -->
                 <div class="form-group">
-                    <label>Fator de Potência Desejado <span class="unit">(FP)</span></label>
-                    <input type="number" id="fpDesejado" placeholder="0.95" min="0.7" max="1" step="0.01" value="0.95">
+                    <label>
+                        <i class="bi bi-graph-up"></i>
+                        Fator de Potência Desejado <span class="unit">(FP)</span>
+                    </label>
+                    <input type="number" id="fpDesejado" placeholder="0.95" min="0.7" max="1" step="0.01" value="0.95" required>
                 </div>
 
+                <!-- BOTÕES DE AÇÃO -->
                 <div class="button-group">
-                    <button class="btn-calculate" onclick="calcularPotencias()">Calcular</button>
-                    <button class="btn-reset" onclick="limparFormulario()">Limpar</button>
-                    <button class="btn-export" onclick="exportarCSV()">Exportar CSV</button>
+                    <button class="btn-calculate" onclick="calcularPotencias()">
+                        <i class="bi bi-calculator"></i> Calcular
+                    </button>
+                    <button class="btn-reset" onclick="limparFormulario()">
+                        <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                    </button>
+                    <button class="btn-export" onclick="exportarCSV()">
+                        <i class="bi bi-download"></i> Exportar CSV
+                    </button>
                 </div>
 
+                <!-- FÓRMULAS -->
                 <div class="formula-display" id="formulaDisplay" style="display: none;">
-                    <strong>Fórmulas Utilizadas:</strong><br>
+                    <strong><i class="bi bi-calculator-fill"></i> Fórmulas Utilizadas:</strong><br>
                     P₃φ = W1 + W2<br>
-                    Q₃φ = √3 × (W2 - W1)<br>
+                    Q₃φ = √3 × (W1 - W2)<br>
                     S₃φ = √(P₃φ² + Q₃φ²)<br>
-                    FP = cos(φ) = P₃φ / S₃φ<br>
-                    C = Qc₃φ / (3 × 2π × f × VL²)
+                    FP = P₃φ / S₃φ<br>
+                    Qc = P × (tanφ₁ - tanφ₂)
                 </div>
             </div>
 
-            <!-- Seção de Resultados -->
+            <!-- ========== SEÇÃO DE RESULTADOS ========== -->
             <div class="section">
-                <div class="section-title">Resultados dos Cálculos</div>
+                <div class="section-title">
+                    <i class="bi bi-bar-chart"></i> Resultados dos Cálculos
+                </div>
 
                 <div class="results-container">
                     <div class="result-item">
-                        <div class="result-label">Potência Ativa Trifásica</div>
+                        <div class="result-label">
+                            <i class="bi bi-lightning-charge"></i> Potência Ativa Trifásica
+                        </div>
                         <div class="result-value">
-                            <span id="resultP">0</span>
-                            <span class="result-unit">W</span>
+                            <span id="resultP">0</span> <span class="result-unit">W</span>
                         </div>
                     </div>
-
                     <div class="result-item">
-                        <div class="result-label">Potência Reativa Trifásica</div>
+                        <div class="result-label">
+                            <i class="bi bi-diagram-3"></i> Potência Reativa Trifásica
+                        </div>
                         <div class="result-value">
-                            <span id="resultQ">0</span>
-                            <span class="result-unit">VAr</span>
+                            <span id="resultQ">0</span> <span class="result-unit">VAr</span>
                         </div>
                     </div>
-
                     <div class="result-item">
-                        <div class="result-label">Potência Aparente Trifásica</div>
+                        <div class="result-label">
+                            <i class="bi bi-cpu"></i> Potência Aparente Trifásica
+                        </div>
                         <div class="result-value">
-                            <span id="resultS">0</span>
-                            <span class="result-unit">VA</span>
+                            <span id="resultS">0</span> <span class="result-unit">VA</span>
                         </div>
                     </div>
-
                     <div class="result-item">
-                        <div class="result-label">Fator de Potência</div>
+                        <div class="result-label">
+                            <i class="bi bi-percent"></i> Fator de Potência
+                        </div>
+                        <div class="result-value"><span id="resultFP">0</span></div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">
+                            <i class="bi bi-compass"></i> Ângulo de Fase (φ)
+                        </div>
                         <div class="result-value">
-                            <span id="resultFP">0</span>
-                            <span class="result-unit">-</span>
+                            <span id="resultPhi">0</span> <span class="result-unit">°</span>
                         </div>
                     </div>
-
                     <div class="result-item">
-                        <div class="result-label">Ângulo de Fase (φ)</div>
-                        <div class="result-value">
-                            <span id="resultPhi">0</span>
-                            <span class="result-unit">°</span>
+                        <div class="result-label">
+                            <i class="bi bi-tag-fill"></i> Tipo de Carga
                         </div>
-                    </div>
-
-                    <div class="result-item">
-                        <div class="result-label">Tipo de Carga</div>
-                        <div class="result-value" style="color: #666; font-size: 16px;">
-                            <span id="resultTipo">-</span>
-                        </div>
+                        <div class="result-value"><span id="resultTipo">-</span></div>
                     </div>
                 </div>
 
-                <!-- Seção de Capacitor -->
+                <!-- ========== SEÇÃO DE CAPACITOR ========== -->
                 <div class="capacitor-section">
-                    <div class="section-title">Correção do Fator de Potência</div>
-
+                    <div class="section-title">
+                        <i class="bi bi-lightning-fill"></i> Correção do Fator de Potência
+                    </div>
+                    
                     <div class="capacitor-info">
-                        <strong>Objetivo:</strong> Corrigir o fator de potência para <strong id="fpDesejadoDisplay">0.95</strong> (indutivo).
+                        <i class="bi bi-info-circle"></i>
+                        Objetivo: Elevar o fator de potência para <strong id="fpDesejadoDisplay">0.95</strong>
                     </div>
 
                     <div class="capacitor-value">
-                        <div class="capacitor-value-label">Capacitância Necessária (por fase)</div>
+                        <div class="capacitor-value-label">
+                            <i class="bi bi-diagram-2"></i> Capacitância Necessária por Fase
+                        </div>
                         <div class="capacitor-value-display">
-                            <span id="resultC">0</span>
-                            <span class="result-unit">µF</span>
+                            <span id="resultC">0</span> <span class="result-unit">µF</span>
                         </div>
                     </div>
 
-                    <div style="margin-top: 15px; font-size: 12px; color: #856404;">
-                        <strong>Nota:</strong> Os capacitores devem ser ligados em <strong>paralelo</strong> com a carga, podendo ser configurados em <strong>Y (estrela)</strong> ou <strong>Δ (delta)</strong>.
+                    <!-- Tipo de Ligação -->
+                    <div id="ligacao-container" style="margin: 20px 0;">
+                        <strong style="font-size: 14px; color: #856404; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="bi bi-share-2"></i> Tipo de Ligação dos Capacitores:
+                        </strong>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="ligacao-btn active" data-ligacao="Y">
+                                <i class="bi bi-diagram-2"></i> Y (Estrela)
+                            </button>
+                            <button class="ligacao-btn" data-ligacao="DELTA">
+                                <i class="bi bi-diagram-3"></i> Δ (Delta)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card WEG Individual -->
+                    <div id="resultado-weg-container" style="display: none;"></div>
+
+                    <!-- Sugestões de Combinações -->
+                    <div id="combinacoes-container" style="display: none; margin-top: 25px;">
+                        <h3 style="color: #856404; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-shuffle"></i> Sugestões de Combinações em Paralelo
+                        </h3>
+                        <div id="combinacoes-list"></div>
+                    </div>
+
+                    <div style="margin-top: 18px; font-size: 12.5px; color: #856404; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-lightbulb"></i>
+                        <strong>Nota:</strong> Prefira associações em paralelo para valores mais precisos.
                     </div>
                 </div>
 
                 <!-- Triângulo de Potências -->
                 <div class="power-triangle" id="triangleContainer" style="display: none;">
-                    <canvas id="triangleCanvas" width="300" height="250"></canvas>
+                    <canvas id="triangleCanvas" width="320" height="260"></canvas>
                 </div>
             </div>
         </div>
     </div>
+           <!-- MODAL MÉTODO DE ARON -->
+<div id="modalAron" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-button" onclick="fecharModal()">&times;</span>
+        <h2 style="color: #0fa96c; margin-bottom: 15px; border-bottom: 2px solid #0fa96c; padding-bottom: 10px;">
+            O Método dos Dois Wattímetros (Método de Aron)
+        </h2>
+        <div class="modal-body" style="text-align: justify; line-height: 1.6; color: #2c3e50;">
+            <p>O método dos dois wattímetros — também conhecido como <strong>Método de Aron</strong> — é uma técnica utilizada para medir a potência elétrica total em sistemas trifásicos a <strong>três fios</strong>, equilibrados ou desequilibrados.</p>
+            
+            <!-- SEÇÃO DA IMAGEM -->
+            <div style="text-align: center; margin: 20px 0; background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
+                <img src="med_pot85-2J.jpg" alt="Esquema de ligação do Método de Aron" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">
+                    Fonte: <a href="https://eletricatotal.com/pagina9/med_pot.htm" target="_blank" style="color: #0fa96c; text-decoration: none;">Eletrica Total</a>
+                </p>
+            </div>
 
-    <footer class="footer">
-        <p>&copy; 2025 Desenvolvido por Anderson de Souza Santos e Hiarley Alves Rodrigues</p>
-    </footer>
-
+            <h3 style="font-size: 18px; margin-top: 15px;">Contexto Histórico</h3>
+            <p>O método deve seu nome ao cientista alemão <strong>Hermann Aron (1845–1913 )</strong>. Em 1891, Aron patenteou este medidor trifásico baseado em apenas dois wattímetros, tomando uma das fases como referência.</p>
+            
+            <h3 style="font-size: 18px; margin-top: 15px;">Princípio de Funcionamento</h3>
+            <p>Baseado nas Leis de Kirchhoff, em um sistema a três fios, dois wattímetros são suficientes. A <strong>potência ativa total (P)</strong> é a soma algébrica das leituras:</p>
+            <p style="text-align: center; background: #f8f9fa; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 18px; color: #2c3e50;">
+                Pₜ = W₁ + W₂
+            </p>
+            
+            <h3 style="font-size: 18px; margin-top: 15px;">Comportamento das Leituras</h3>
+            <ul style="margin-left: 20px;">
+                <li><strong>FP > 0,5:</strong> Ambos os wattímetros leem valores positivos.</li>
+                <li><strong>FP = 0,5:</strong> Um dos wattímetros lê zero.</li>
+                <li><strong>FP < 0,5:</strong> Um dos wattímetros apresenta leitura <strong>negativa</strong>.</li>
+            </ul>
+            
+            <h3 style="font-size: 18px; margin-top: 15px;">Natureza da Carga</h3>
+            <p>Se <strong>W₁ = W₂</strong>, a carga é resistiva; se <strong>W₂ > W₁</strong>, é indutiva; se <strong>W₂ < W₁</strong>, é capacitiva.</p>
+        </div>
+    </div>
+</div>
+    <!-- RODAPÉ -->
+<footer class="footer">
+    <p>
+        <i class="bi bi-c-circle"></i>
+        2025 Desenvolvido por Anderson de Souza Santos
+        <br><strong>Instituto Federal do Sertão Paraibano (IFSertãoPB)</strong>
+    </p>
+    <div class="footer-contacts">
+        <a href="https://www.linkedin.com/in/anderson-souza-eng/" target="_blank" class="footer-link" title="LinkedIn">
+            <i class="bi bi-linkedin"></i> LinkedIn
+        </a>
+        <a href="mailto:info.andersonsouza@gmail.com" class="footer-link" title="E-mail">
+            <i class="bi bi-envelope-fill"></i> info.andersonsouza@gmail.com
+        </a>
+    </div>
+</footer>
+    <!-- Arquivos JavaScript -->
+    <script src="db-capacitores.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Script para recarregar página ao clicar na logo -->
+    <script>
+        function recarregarPagina() {
+            location.reload();
+        }
+    </script>
 </body>
 </html>
