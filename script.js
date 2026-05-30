@@ -56,88 +56,105 @@ function calcularPotencias() {
     const wegContainer = document.getElementById('resultado-weg-container');
     const combinacoesContainer = document.getElementById('combinacoes-container');
 
+    // Reset visual
     errorEl.classList.remove('show');
     successEl.classList.remove('show');
     wegContainer.style.display = 'none';
     combinacoesContainer.style.display = 'none';
 
-    const w1 = parseFloat(document.getElementById('w1').value) || NaN;
-    const w2 = parseFloat(document.getElementById('w2').value) || NaN;
-    const vl = parseFloat(document.getElementById('vl').value) || NaN;
-    const il = parseFloat(document.getElementById('il').value) || NaN;
-    const fpDesejado = parseFloat(document.getElementById('fpDesejado').value) || NaN;
+    // ==================== ENTRADAS ====================
+    const w1 = Number(document.getElementById('w1').value);
+    const w2 = Number(document.getElementById('w2').value);
+    const vl = Number(document.getElementById('vl').value);
+    const il = Number(document.getElementById('il').value);
+    const fpDesejado = Number(document.getElementById('fpDesejado').value);
 
-    if ([w1, w2, vl, il, fpDesejado].some(isNaN)) {
+    // ==================== VALIDAÇÕES ====================
+    if ([w1, w2, vl, il, fpDesejado].some(v => isNaN(v))) {
         mostrarErro('Preencha todos os campos com valores válidos.');
         return;
     }
+
     if (vl <= 0 || il <= 0) {
         mostrarErro('Tensão e corrente devem ser maiores que zero.');
         return;
     }
+
     if (fpDesejado < 0.7 || fpDesejado > 1) {
         mostrarErro('Fator de potência desejado deve estar entre 0.7 e 1.0');
         return;
     }
 
     try {
-        const P3f = w1 + w2;
-        const Q3f = Math.sqrt(3) * (w1 - w2);
-        const S3f = Math.hypot(P3f, Q3f);
+        // ==================== CÁLCULOS ELÉTRICOS ====================
+        const P = w1 + w2;
+        const Q = Math.sqrt(3) * (w1 - w2);
+        const S = Math.hypot(P, Q);
 
-        const fpAtual = S3f > 0 ? P3f / S3f : 0;
-        const phiRad = Math.acos(Math.max(-1, Math.min(1, fpAtual)));
+        const fp = S > 0 ? P / S : 0;
+
+        const phiRad = Math.acos(Math.max(-1, Math.min(1, fp)));
+        const phiDeg = phiRad * 180 / Math.PI;
+
         const phiDesejadoRad = Math.acos(fpDesejado);
 
-        const Qc = P3f * (Math.tan(phiRad) - Math.tan(phiDesejadoRad));
+        // Potência reativa necessária para correção
+        const Qc = P * (Math.tan(phiRad) - Math.tan(phiDesejadoRad));
 
-        const omega = 2 * Math.PI * frequenciaAtual;
-        let C = 0;
-
-        if (tipoLigacao === 'Y') {
-            C = Qc > 0 ? (Qc * 1e6) / (3 * omega * vl * vl) : 0;
-        } else {
-            C = Qc > 0 ? (Qc * 1e6) / (omega * vl * vl) : 0;
-        }
-
-        // Correção para evitar números negativos
-        const QExibido = Math.abs(Q3f);
-        const CExibido = Math.max(0, C);
-
-        // Atualiza interface
-        document.getElementById('resultP').textContent = P3f.toFixed(1);
-        document.getElementById('resultQ').textContent = QExibido.toFixed(1);
-        document.getElementById('resultS').textContent = S3f.toFixed(1);
-        document.getElementById('resultFP').textContent = fpAtual.toFixed(4);
-        document.getElementById('resultPhi').textContent = (phiRad * 180 / Math.PI).toFixed(1);
-        document.getElementById('resultC').textContent = CExibido.toFixed(2);
-        document.getElementById('fpDesejadoDisplay').textContent = fpDesejado.toFixed(2);
-
-        // ===== CORREÇÃO: Determinar tipo de carga baseado na relação entre W1 e W2 =====
+        // ==================== TIPO DE CARGA ====================
         let tipoCarga = '';
-        const tolerancia = 10; // tolerância de 10W para considerar resistiva
+        const tolerancia = 10;
 
         if (Math.abs(w1 - w2) < tolerancia) {
             tipoCarga = 'Resistiva';
         } else if (w1 > w2) {
-            tipoCarga = 'Capacitiva';
+            tipoCarga = 'Indutiva';    // CORREÇÃO: Q > 0 é indutiva no Método de Aron
         } else {
-            tipoCarga = 'Indutiva';
+            tipoCarga = 'Capacitiva';  // CORREÇÃO: Q < 0 é capacitiva no Método de Aron
         }
 
+        // ==================== CÁLCULO DO CAPACITOR ====================
+        const omega = 2 * Math.PI * frequenciaAtual;
+        let C = 0;
+
+        // Só calcula banco de capacitores se a carga inicial for indutiva e houver necessidade de correção
+        if (tipoCarga === 'Indutiva' && Qc > 0) {
+            if (tipoLigacao === 'Y') {
+                C = (Qc * 1e6) / (3 * omega * vl * vl);
+            } else {
+                C = (Qc * 1e6) / (omega * vl * vl);
+            }
+        } else {
+            C = 0; // Cargas resistivas ou já capacitivas não precisam de capacitores adicionais
+        }
+
+        // ==================== TRATAMENTO PARA EXIBIÇÃO ====================
+        const QExibido = Math.abs(Q);
+        const CExibido = Math.max(0, C);
+
+        // ==================== ATUALIZA INTERFACE ====================
+        document.getElementById('resultP').textContent = P.toFixed(1);
+        document.getElementById('resultQ').textContent = QExibido.toFixed(1);
+        document.getElementById('resultS').textContent = S.toFixed(1);
+        document.getElementById('resultFP').textContent = fp.toFixed(4);
+        document.getElementById('resultPhi').textContent = phiDeg.toFixed(1);
+        document.getElementById('resultC').textContent = CExibido.toFixed(2);
+        document.getElementById('fpDesejadoDisplay').textContent = fpDesejado.toFixed(2);
         document.getElementById('resultTipo').textContent = tipoCarga;
 
+        // ==================== EXIBIÇÃO ====================
         document.getElementById('formulaDisplay').style.display = 'block';
         document.getElementById('triangleContainer').style.display = 'flex';
 
-        desenharTriangulo(P3f, Q3f, S3f, phiRad * 180 / Math.PI, tipoCarga);
+        desenharTriangulo("triangleCanvas", P, Q, S, phiDeg, tipoCarga);
 
         successEl.classList.add('show');
         resultadosValidos = true;
 
-        if (C > 3) {
-            renderizarCardWEG(C, vl);
-            gerarSugestoesCombinacoes(C, vl);
+        // ==================== WEG ====================
+        if (CExibido > 3) {
+            renderizarCardWEG(CExibido, vl);
+            gerarSugestoesCombinacoes(CExibido, vl);
         }
 
     } catch (err) {
@@ -194,7 +211,6 @@ function renderizarCardWEG(cUf, vl) {
     container.innerHTML = `
         <div class="cap-card">
             <div class="cap-card-content">
-                <!-- COLUNA ESQUERDA: IMAGEM -->
                 <div class="cap-card-image-section">
                     <div class="cap-card-image-wrapper">
                         <img src="capa.png" alt="Capacitor WEG" class="cap-card-image">
@@ -202,7 +218,6 @@ function renderizarCardWEG(cUf, vl) {
                     <p class="cap-card-image-disclaimer">Imagem meramente ilustrativa</p>
                 </div>
 
-                <!-- COLUNA DIREITA: INFORMAÇÕES -->
                 <div class="cap-card-info-section">
                     <div class="cap-card-header">
                         <i class="bi bi-lightning-fill weg-icon"></i>
@@ -332,174 +347,135 @@ function gerarSugestoesCombinacoes(cNecessaria, vl) {
     }
 }
 
-// ==================== TRIÂNGULO DE POTÊNCIAS MELHORADO ====================
-function desenharTriangulo(p, q, s, phi, tipoCarga) {
-    const canvas = document.getElementById('triangleCanvas');
+// TRIANGULO
+function desenharTriangulo(canvasId, p, q, s, phi, tipoCarga) {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext("2d");
 
-    const w = canvas.width, h = canvas.height;
-    const padding = 60;
-    const baseX = padding;
-    const baseY = h - padding;
+    // ==================== CONFIGURAÇÃO DE TELA ====================
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
 
-    // ===== ESCALA DINÂMICA =====
-    const maxValor = Math.max(p, Math.abs(q), s) * 1.1;
-    const escalaX = (w - padding * 2) / maxValor;
-    const escalaY = (h - padding * 2) / maxValor;
+    const w = rect.width;
+    const h = rect.height;
+    ctx.clearRect(0, 0, w, h);
 
-    // ===== DESENHAR EIXOS =====
-    ctx.strokeStyle = '#ccc';
+    // Margens e Origem dinâmica
+    const margin = 60;
+    const originX = margin + 10;
+    // Se Q < 0 (Capacitiva), a origem sobe para o triângulo descer sem bater no fundo
+    const originY = q >= 0 ? h - margin - 20 : margin + 60;
+
+    const maxVal = s * 1.2 || 1;
+    const scale = (w - margin * 2.5) / maxVal;
+
+    const px = originX + p * scale;
+    const py = originY;
+    const qx = px;
+    const qy = originY - (q * scale);
+
+    // ==================== DESENHO DO GRID ====================
+    ctx.strokeStyle = "#f0f0f0";
     ctx.lineWidth = 1;
+    ctx.beginPath();
+    // Linhas verticais do grid
+    for (let i = 0; i <= 5; i++) {
+        let x = originX + (i * (p * scale) / 5);
+        ctx.moveTo(x, margin);
+        ctx.lineTo(x, h - margin);
+    }
+    // Linhas horizontais do grid
+    for (let i = 0; i <= 5; i++) {
+        let y = q >= 0 ? originY - (i * (q * scale) / 5) : originY + (i * (Math.abs(q) * scale) / 5);
+        ctx.moveTo(originX, y);
+        ctx.lineTo(w - margin, y);
+    }
+    ctx.stroke();
+
+    // ==================== EIXOS PRINCIPAIS ====================
+    ctx.strokeStyle = "#ccc";
     ctx.setLineDash([5, 5]);
-    
     ctx.beginPath();
-    ctx.moveTo(baseX - 20, baseY);
-    ctx.lineTo(w - padding + 20, baseY);
+    ctx.moveTo(originX - 10, originY); ctx.lineTo(w - margin, originY); // Eixo P
+    ctx.moveTo(originX, 0); ctx.lineTo(originX, h); // Eixo Q
     ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(baseX, baseY + 20);
-    ctx.lineTo(baseX, padding - 20);
-    ctx.stroke();
-    
     ctx.setLineDash([]);
 
-    // ===== SETAS DOS EIXOS =====
-    const arrowSize = 8;
-    
-    ctx.fillStyle = '#999';
+    // ==================== TRIÂNGULO ====================
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // P (Ativa)
     ctx.beginPath();
-    ctx.moveTo(w - padding + 20, baseY);
-    ctx.lineTo(w - padding + 20 - arrowSize, baseY - arrowSize/2);
-    ctx.lineTo(w - padding + 20 - arrowSize, baseY + arrowSize/2);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.moveTo(baseX, padding - 20);
-    ctx.lineTo(baseX - arrowSize/2, padding - 20 + arrowSize);
-    ctx.lineTo(baseX + arrowSize/2, padding - 20 + arrowSize);
-    ctx.closePath();
-    ctx.fill();
-
-    // ===== LABELS DOS EIXOS =====
-    ctx.fillStyle = '#666';
-    ctx.font = 'bold 12px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillText('P (W)', w - padding - 5, baseY - 8);
-    ctx.textAlign = 'center';
-    ctx.fillText('Q (VAr)', baseX + 15, padding - 8);
-
-    // ===== DESENHAR GRID =====
-    ctx.strokeStyle = '#f0f0f0';
-    ctx.lineWidth = 0.5;
-    ctx.font = '10px Arial';
-    ctx.fillStyle = '#999';
-    
-    for (let i = 0; i <= 5; i++) {
-        const x = baseX + (i * (w - padding * 2) / 5);
-        ctx.beginPath();
-        ctx.moveTo(x, baseY);
-        ctx.lineTo(x, padding);
-        ctx.stroke();
-        const valor = Math.round((maxValor * i / 5));
-        ctx.textAlign = 'center';
-        ctx.fillText(valor, x, baseY + 15);
-    }
-    
-    for (let i = 0; i <= 5; i++) {
-        const y = baseY - (i * (h - padding * 2) / 5);
-        ctx.beginPath();
-        ctx.moveTo(baseX, y);
-        ctx.lineTo(w - padding, y);
-        ctx.stroke();
-        const valor = Math.round((maxValor * i / 5));
-        ctx.textAlign = 'right';
-        ctx.fillText(valor, baseX - 8, y + 4);
-    }
-
-    // ===== CALCULAR COORDENADAS =====
-    const pX = baseX + (p * escalaX);
-    const pY = baseY;
-    
-    const qY = baseY - (Math.abs(q) * escalaY);
-    const qX = baseX + (p * escalaX);
-    
-    const sX = baseX + (p * escalaX);
-    const sY = baseY - (Math.abs(q) * escalaY);
-
-    // ===== DESENHAR TRIÂNGULO =====
-    
-    // Lado P (horizontal) - Azul
-    ctx.strokeStyle = '#2196F3';
+    ctx.strokeStyle = "#2196F3";
     ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(baseX, pY);
-    ctx.lineTo(pX, pY);
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(px, py);
     ctx.stroke();
-    
-    // Lado Q (vertical) - Laranja (indutiva) ou Roxo (capacitiva)
-    ctx.strokeStyle = q > 0 ? '#ff9800' : '#9c27b0';
-    ctx.lineWidth = 4;
+
+    // Q (Reativa)
     ctx.beginPath();
-    ctx.moveTo(pX, baseY);
-    ctx.lineTo(pX, qY);
+    ctx.strokeStyle = q >= 0 ? "#FF9800" : "#9C27B0";
+    ctx.moveTo(px, py);
+    ctx.lineTo(qx, qy);
     ctx.stroke();
-    
-    // Lado S (hipotenusa) - Vermelho
-    ctx.strokeStyle = '#e53935';
+
+    // S (Aparente)
+    ctx.beginPath();
+    ctx.strokeStyle = "#F44336";
     ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(baseX, baseY);
-    ctx.lineTo(sX, sY);
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(qx, qy);
     ctx.stroke();
 
-    // ===== DESENHAR ÂNGULO PHI =====
-    ctx.strokeStyle = '#6a1b9a';
-    ctx.lineWidth = 2.5;
+    // ==================== ÂNGULO (PHI) ====================
     ctx.beginPath();
-    const raioAngulo = 35;
-    const anguloRad = phi * Math.PI / 180;
-    ctx.arc(baseX, baseY, raioAngulo, 0, -anguloRad, true);
+    ctx.strokeStyle = "#673AB7";
+    ctx.lineWidth = 2;
+    const raioArc = 35;
+    const phiRad = (phi * Math.PI) / 180;
+    const anguloFinal = q >= 0 ? -phiRad : phiRad;
+    
+    ctx.arc(originX, originY, raioArc, 0, anguloFinal, q >= 0);
     ctx.stroke();
 
-    // ===== TIPO DE CARGA NO TOPO =====
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`CARGA ${tipoCarga.toUpperCase()}`, w / 2, 25);
+    // ==================== LEGENDAS (LABELS) ====================
+    ctx.font = "bold 12px Arial";
+    
+    // Label P
+    ctx.fillStyle = "#2196F3";
+    ctx.textAlign = "center";
+    // Coloca o texto oposto à direção do triângulo
+    ctx.fillText(`P = ${p.toFixed(1)} W`, originX + (p * scale) / 2, originY + (q >= 0 ? 20 : -10));
 
-    // ===== LEGENDA DE CORES =====
-    const legendaX = w - 200;
-    const legendaY = 50;
-    
-    // P (Azul)
-    ctx.fillStyle = '#2196F3';
-    ctx.fillRect(legendaX, legendaY, 12, 12);
-    ctx.fillStyle = '#333';
-    ctx.font = '9px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(`Potência Ativa (P) = ${p.toFixed(0)} W`, legendaX + 18, legendaY + 10);
-    
-    // Q (Laranja/Roxo)
-    ctx.fillStyle = q > 0 ? '#ff9800' : '#9c27b0';
-    ctx.fillRect(legendaX, legendaY + 20, 12, 12);
-    ctx.fillStyle = '#333';
-    ctx.fillText(`Potência Reativa (Q) = ${Math.abs(q).toFixed(0)} VAr`, legendaX + 18, legendaY + 30);
-    
-    // S (Vermelho)
-    ctx.fillStyle = '#e53935';
-    ctx.fillRect(legendaX, legendaY + 40, 12, 12);
-    ctx.fillStyle = '#333';
-    ctx.fillText(`Potência Aparente (S) = ${s.toFixed(0)} VA`, legendaX + 18, legendaY + 50);
+    // Label Q
+    ctx.fillStyle = q >= 0 ? "#FF9800" : "#9C27B0";
+    ctx.textAlign = "left";
+    ctx.fillText(`Q = ${Math.abs(q).toFixed(1)} VAr`, qx + 12, originY - (q * scale) / 2);
 
-    // φ (Roxo escuro)
-    ctx.fillStyle = '#6a1b9a';
-    ctx.fillRect(legendaX, legendaY + 60, 12, 12);
-    ctx.fillStyle = '#333';
-    ctx.fillText(`Ângulo (φ) = ${phi.toFixed(1)}°`, legendaX + 18, legendaY + 70);
+    // Label S
+    ctx.fillStyle = "#F44336";
+    ctx.textAlign = "center";
+    // Cálculo de offset para S não encavalar na hipotenusa
+    const midSX = (originX + qx) / 2;
+    const midSY = (originY + qy) / 2;
+    const sOffsetY = q >= 0 ? -15 : 25;
+    ctx.fillText(`S = ${s.toFixed(1)} VA`, midSX - 15, midSY + sOffsetY);
+
+    // Label Ângulo φ
+    ctx.fillStyle = "#673AB7";
+    ctx.textAlign = "left";
+    ctx.fillText(`φ = ${phi.toFixed(1)}°`, originX + raioArc + 8, originY + (q >= 0 ? -10 : 15));
+
+    // ==================== TÍTULO ====================
+    ctx.fillStyle = "#333";
+    ctx.font = "bold 16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(`CARGA ${tipoCarga.toUpperCase()}`, w / 2, 30);
 }
 
 // ==================== FUNÇÕES AUXILIARES ====================
@@ -597,6 +573,7 @@ function exportarCSV() {
 window.onload = () => {
     document.getElementById('w1').focus();
 };
+
 // FUNÇÕES DO MODAL (MÉTODO DE ARON)
 function abrirModal() {
     document.getElementById('modalAron').style.display = 'flex';
