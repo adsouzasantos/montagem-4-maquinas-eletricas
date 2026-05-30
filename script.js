@@ -445,32 +445,33 @@ function desenharTriangulo(canvasId, p, q, s, phi, tipoCarga) {
 
     // ==================== LEGENDAS (LABELS) ====================
     ctx.font = "bold 12px Arial";
-    
-    // Label P
-    ctx.fillStyle = "#2196F3";
-    ctx.textAlign = "center";
-    // Coloca o texto oposto à direção do triângulo
-    ctx.fillText(`P = ${p.toFixed(1)} W`, originX + (p * scale) / 2, originY + (q >= 0 ? 20 : -10));
+    
+    // Label P
+    ctx.fillStyle = "#2196F3";
+    ctx.textAlign = "center";
+    // Coloca o texto oposto à direção do triângulo
+    ctx.fillText(`P = ${p.toFixed(1)} W`, originX + (p * scale) / 2, originY + (q >= 0 ? 20 : -10));
 
-    // Label Q
-    ctx.fillStyle = q >= 0 ? "#FF9800" : "#9C27B0";
-    ctx.textAlign = "left";
-    ctx.fillText(`Q = ${Math.abs(q).toFixed(1)} VAr`, qx + 12, originY - (q * scale) / 2);
+    // Label Q
+    ctx.fillStyle = q >= 0 ? "#FF9800" : "#9C27B0";
+    ctx.textAlign = "left";
+    ctx.fillText(`Q = ${Math.abs(q).toFixed(1)} VAr`, qx + 12, originY - (q * scale) / 2);
 
-    // Label S
-    ctx.fillStyle = "#F44336";
-    ctx.textAlign = "center";
-    // Cálculo de offset para S não encavalar na hipotenusa
-    const midSX = (originX + qx) / 2;
-    const midSY = (originY + qy) / 2;
-    const sOffsetY = q >= 0 ? -15 : 25;
-    ctx.fillText(`S = ${s.toFixed(1)} VA`, midSX - 15, midSY + sOffsetY);
+    // Label S
+    ctx.fillStyle = "#F44336";
+    ctx.textAlign = "center";
+    // Afastando o S mais para a esquerda (X) e para cima/baixo (Y) para sair da linha vermelha
+    const midSX = (originX + qx) / 2;
+    const midSY = (originY + qy) / 2;
+    const sOffsetX = -35; // Distância extra para a esquerda
+    const sOffsetY = q >= 0 ? -25 : 35; // Distância extra no eixo Y
+    ctx.fillText(`S = ${s.toFixed(1)} VA`, midSX + sOffsetX, midSY + sOffsetY);
 
-    // Label Ângulo φ
-    ctx.fillStyle = "#673AB7";
-    ctx.textAlign = "left";
-    ctx.fillText(`φ = ${phi.toFixed(1)}°`, originX + raioArc + 8, originY + (q >= 0 ? -10 : 15));
-
+    // Label Ângulo φ
+    ctx.fillStyle = "#673AB7";
+    ctx.textAlign = "left";
+    // Afastando o texto mais para a direita do arco e ajustando a altura para sair da linha curva
+    ctx.fillText(`φ = ${phi.toFixed(1)}°`, originX + raioArc + 18, originY + (q >= 0 ? -18 : 22));
     // ==================== TÍTULO ====================
     ctx.fillStyle = "#333";
     ctx.font = "bold 16px Arial";
