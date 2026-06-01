@@ -108,25 +108,44 @@ function calcularPotencias() {
         if (Math.abs(w1 - w2) < tolerancia) {
             tipoCarga = 'Resistiva';
         } else if (w1 > w2) {
-            tipoCarga = 'Indutiva';    // CORREÇÃO: Q > 0 é indutiva no Método de Aron
+            tipoCarga = 'Indutiva';
         } else {
-            tipoCarga = 'Capacitiva';  // CORREÇÃO: Q < 0 é capacitiva no Método de Aron
+            tipoCarga = 'Capacitiva';
         }
 
         // ==================== CÁLCULO DO CAPACITOR ====================
         const omega = 2 * Math.PI * frequenciaAtual;
         let C = 0;
 
-        // Só calcula banco de capacitores se a carga inicial for indutiva e houver necessidade de correção
-        if (tipoCarga === 'Indutiva' && Qc > 0) {
+        // CORREÇÃO: Calcula capacitância se houver reativa positiva a compensar
+        if (Qc > 0.1) {
             if (tipoLigacao === 'Y') {
-                C = (Qc * 1e6) / (3 * omega * vl * vl);
+                // Ligação em Y: V_fase = V_linha / √3
+                const vFase = vl / Math.sqrt(3);
+                C = (Qc * 1e6) / (3 * omega * vFase * vFase);
             } else {
-                C = (Qc * 1e6) / (omega * vl * vl);
+                // Ligação em Delta: usa tensão de linha diretamente
+                C = (Qc * 1e6) / (3 * omega * vl * vl);
             }
         } else {
-            C = 0; // Cargas resistivas ou já capacitivas não precisam de capacitores adicionais
+            C = 0; // Nenhuma correção necessária
         }
+
+        // Debug no console
+        console.log('=== CÁLCULO DE CAPACITÂNCIA ===');
+        console.log('W1:', w1.toFixed(2), 'W | W2:', w2.toFixed(2), 'W');
+        console.log('P (Ativa):', P.toFixed(2), 'W');
+        console.log('Q (Reativa):', Q.toFixed(2), 'VAr');
+        console.log('FP Atual:', fp.toFixed(4));
+        console.log('Ângulo φ:', phiDeg.toFixed(2), '°');
+        console.log('Qc (Reativa Comp.):', Qc.toFixed(2), 'VAr');
+        console.log('Tipo de Carga:', tipoCarga);
+        console.log('Ligação:', tipoLigacao);
+        console.log('Tensão de Linha:', vl.toFixed(2), 'V');
+        console.log('Frequência:', frequenciaAtual, 'Hz');
+        console.log('Omega (ω):', omega.toFixed(2));
+        console.log('Capacitância Calculada:', C.toFixed(4), 'µF');
+        console.log('================================');
 
         // ==================== TRATAMENTO PARA EXIBIÇÃO ====================
         const QExibido = Math.abs(Q);
@@ -155,11 +174,15 @@ function calcularPotencias() {
         if (CExibido > 3) {
             renderizarCardWEG(CExibido, vl);
             gerarSugestoesCombinacoes(CExibido, vl);
+        } else if (CExibido > 0) {
+            // Se capacitância for pequena mas positiva, ainda tenta exibir
+            renderizarCardWEG(CExibido, vl);
+            gerarSugestoesCombinacoes(CExibido, vl);
         }
 
     } catch (err) {
         mostrarErro('Erro ao realizar os cálculos.');
-        console.error(err);
+        console.error('Erro detalhado:', err);
     }
 }
 
@@ -347,7 +370,7 @@ function gerarSugestoesCombinacoes(cNecessaria, vl) {
     }
 }
 
-// TRIANGULO
+// ==================== DESENHAR TRIÂNGULO ====================
 function desenharTriangulo(canvasId, p, q, s, phi, tipoCarga) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -445,33 +468,31 @@ function desenharTriangulo(canvasId, p, q, s, phi, tipoCarga) {
 
     // ==================== LEGENDAS (LABELS) ====================
     ctx.font = "bold 12px Arial";
-    
-    // Label P
-    ctx.fillStyle = "#2196F3";
-    ctx.textAlign = "center";
-    // Coloca o texto oposto à direção do triângulo
-    ctx.fillText(`P = ${p.toFixed(1)} W`, originX + (p * scale) / 2, originY + (q >= 0 ? 20 : -10));
+    
+    // Label P
+    ctx.fillStyle = "#2196F3";
+    ctx.textAlign = "center";
+    ctx.fillText(`P = ${p.toFixed(1)} W`, originX + (p * scale) / 2, originY + (q >= 0 ? 20 : -10));
 
-    // Label Q
-    ctx.fillStyle = q >= 0 ? "#FF9800" : "#9C27B0";
-    ctx.textAlign = "left";
-    ctx.fillText(`Q = ${Math.abs(q).toFixed(1)} VAr`, qx + 12, originY - (q * scale) / 2);
+    // Label Q
+    ctx.fillStyle = q >= 0 ? "#FF9800" : "#9C27B0";
+    ctx.textAlign = "left";
+    ctx.fillText(`Q = ${Math.abs(q).toFixed(1)} VAr`, qx + 12, originY - (q * scale) / 2);
 
-    // Label S
-    ctx.fillStyle = "#F44336";
-    ctx.textAlign = "center";
-    // Afastando o S mais para a esquerda (X) e para cima/baixo (Y) para sair da linha vermelha
-    const midSX = (originX + qx) / 2;
-    const midSY = (originY + qy) / 2;
-    const sOffsetX = -35; // Distância extra para a esquerda
-    const sOffsetY = q >= 0 ? -25 : 35; // Distância extra no eixo Y
-    ctx.fillText(`S = ${s.toFixed(1)} VA`, midSX + sOffsetX, midSY + sOffsetY);
+    // Label S
+    ctx.fillStyle = "#F44336";
+    ctx.textAlign = "center";
+    const midSX = (originX + qx) / 2;
+    const midSY = (originY + qy) / 2;
+    const sOffsetX = -35;
+    const sOffsetY = q >= 0 ? -25 : 35;
+    ctx.fillText(`S = ${s.toFixed(1)} VA`, midSX + sOffsetX, midSY + sOffsetY);
 
-    // Label Ângulo φ
-    ctx.fillStyle = "#673AB7";
-    ctx.textAlign = "left";
-    // Afastando o texto mais para a direita do arco e ajustando a altura para sair da linha curva
-    ctx.fillText(`φ = ${phi.toFixed(1)}°`, originX + raioArc + 18, originY + (q >= 0 ? -18 : 22));
+    // Label Ângulo φ
+    ctx.fillStyle = "#673AB7";
+    ctx.textAlign = "left";
+    ctx.fillText(`φ = ${phi.toFixed(1)}°`, originX + raioArc + 18, originY + (q >= 0 ? -18 : 22));
+    
     // ==================== TÍTULO ====================
     ctx.fillStyle = "#333";
     ctx.font = "bold 16px Arial";
@@ -570,20 +591,20 @@ function exportarCSV() {
     URL.revokeObjectURL(url);
 }
 
-// Inicialização
+// ==================== INICIALIZAÇÃO ====================
 window.onload = () => {
     document.getElementById('w1').focus();
 };
 
-// FUNÇÕES DO MODAL (MÉTODO DE ARON)
+// ==================== FUNÇÕES DO MODAL (MÉTODO DE ARON) ====================
 function abrirModal() {
     document.getElementById('modalAron').style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Impede o scroll da página ao fundo
+    document.body.style.overflow = 'hidden';
 }
 
 function fecharModal() {
     document.getElementById('modalAron').style.display = 'none';
-    document.body.style.overflow = 'auto'; // Restaura o scroll
+    document.body.style.overflow = 'auto';
 }
 
 // Fechar o modal se clicar fora da caixa branca
