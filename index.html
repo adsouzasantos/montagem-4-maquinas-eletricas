@@ -201,7 +201,9 @@
                         <div class="result-label">
                             <i class="bi bi-percent"></i> Fator de Potência
                         </div>
-                        <div class="result-value"><span id="resultFP">0</span></div>
+                        <div class="result-value">
+                            <span id="resultFP">0</span>
+                        </div>
                     </div>
                     <div class="result-item">
                         <div class="result-label">
@@ -215,7 +217,9 @@
                         <div class="result-label">
                             <i class="bi bi-tag-fill"></i> Tipo de Carga
                         </div>
-                        <div class="result-value"><span id="resultTipo">-</span></div>
+                        <div class="result-value">
+                            <span id="resultTipo">-</span>
+                        </div>
                     </div>
                 </div>
 
@@ -242,12 +246,12 @@
                         <strong style="font-size: 14px; color: #856404; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                             <i class="bi bi-share-2"></i> Tipo de Ligação dos Capacitores:
                         </strong>
-                        <div style="display: flex; gap: 12px;">
-                            <button class="ligacao-btn active" data-ligacao="Y">
-                                <i class="bi bi-diagram-2"></i> Y (Estrela)
-                            </button>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                             <button class="ligacao-btn" data-ligacao="DELTA">
                                 <i class="bi bi-diagram-3"></i> Δ (Delta)
+                            </button>
+                            <button class="ligacao-btn active" data-ligacao="Y">
+                                <i class="bi bi-diagram-2"></i> Y (Estrela)
                             </button>
                         </div>
                     </div>
@@ -301,13 +305,13 @@
                 
                 <h3 style="font-size: 18px; margin-top: 15px;">Comportamento das Leituras</h3>
                 <ul style="margin-left: 20px;">
-                    <li><strong>FP > 0,5:</strong> Ambos os wattímetros leem valores positivos.</li>
+                    <li><strong>FP &gt; 0,5:</strong> Ambos os wattímetros leem valores positivos.</li>
                     <li><strong>FP = 0,5:</strong> Um dos wattímetros lê zero.</li>
-                    <li><strong>FP < 0,5:</strong> Um dos wattímetros apresenta leitura <strong>negativa</strong>.</li>
+                    <li><strong>FP &lt; 0,5:</strong> Um dos wattímetros apresenta leitura <strong>negativa</strong>.</li>
                 </ul>
                 
                 <h3 style="font-size: 18px; margin-top: 15px;">Natureza da Carga</h3>
-                <p>Se <strong>W₁ = W₂</strong>, a carga é resistiva; se <strong>W₂ > W₁</strong>, é indutiva; se <strong>W₂ < W₁</strong>, é capacitiva.</p>
+                <p>Se <strong>W₁ = W₂</strong>, a carga é resistiva; se <strong>W₂ &gt; W₁</strong>, é indutiva; se <strong>W₂ &lt; W₁</strong>, é capacitiva.</p>
             </div>
         </div>
     </div>
