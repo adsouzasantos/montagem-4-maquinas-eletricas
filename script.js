@@ -402,7 +402,7 @@ function desenharTriangulo(canvasId, p, q, s, phi, tipoCarga, qFinal) {
     const originY = q >= 0 ? h - margin - 20 : margin + 60;
 
     const maxVal = s * 1.2 || 1;
-    const scale = Math.min((w - margin * 2.5) / maxVal, (h - margin * 2) / (Math.abs(q) || 1));
+    const scale = (w - margin * 2.5) / maxVal;
 
     const px = originX + p * scale;
     const py = originY;
