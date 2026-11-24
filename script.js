@@ -474,8 +474,8 @@ function desenharTriangulo(canvasId, p, q, s, phi, tipoCarga, qFinal) {
         const sFinal = Math.hypot(p, qFinal);
         ctx.fillStyle = '#2E7D32';
         ctx.font = 'bold 12px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`S' = ${sFinal.toFixed(1)} VA (após correção)`, px + 12, qfy - 6);
+        ctx.textAlign = 'center';
+        ctx.fillText(`- - S' = ${sFinal.toFixed(1)} VA (após correção)`, w / 2, 52);
     }
 
     // Ângulo
