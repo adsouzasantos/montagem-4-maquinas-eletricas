@@ -1,10 +1,9 @@
 // ================================================
-// CALCULADORA DE POTÊNCIA TRIFÁSICA (Calc3Φ) - versão 2.0
+// CALCULADORA DE POTÊNCIA TRIFÁSICA (Calc3Φ)
 // Método dos Dois Wattímetros + Correção do Fator de Potência
-// Alterações da v2.0:
-//  - núcleo de cálculo isolado em calcularNucleo() (testável fora do navegador)
+//  - núcleo de cálculo em calcularNucleo() (testável fora do navegador)
 //  - ângulo com sinal (atan2): carga capacitiva não recebe recomendação de capacitores
-//  - leituras dos wattímetros como fonte de verdade; VL·IL usado como verificação de coerência
+//  - leituras dos wattímetros como fonte de verdade; √3·VL·IL usado como verificação de coerência
 //  - seleção comercial pela capacitância equivalente em triângulo (unidades trifásicas UCWT
 //    possuem ligação interna em triângulo), independentemente da opção Y/Δ escolhida
 //  - tensão nominal do capacitor >= tensão de linha informada
